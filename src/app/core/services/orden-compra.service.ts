@@ -11,13 +11,14 @@ import {
   OrdenCompraItemResponseDTO,
   ListarOrdenesParams,
 } from '../models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrdenCompraService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api/v1/ordenes-compra';
+  private readonly baseUrl = `${environment.apiUrl}/ordenes-compra`;
 
   // ==================== Order Operations ====================
 

@@ -8,6 +8,7 @@ import {
   UbicacionConInventarioDTO,
   UbicacionDelProductoDTO,
 } from '../models';
+import { environment } from '../../../environments/environment';
 
 /**
  * Service for managing inventory by location
@@ -17,7 +18,7 @@ import {
 })
 export class InventarioService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api/v1/inventario';
+  private readonly baseUrl = `${environment.apiUrl}/inventario`;
 
   /**
    * Assign inventory to a location with capacity validation

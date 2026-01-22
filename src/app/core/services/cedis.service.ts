@@ -9,6 +9,7 @@ import {
   AgregarUbicacionDTO,
   ActualizarUbicacionDTO,
 } from '../models';
+import { environment } from '../../../environments/environment';
 
 /**
  * Service for managing CEDIS (Distribution Centers) and their locations
@@ -18,7 +19,7 @@ import {
 })
 export class CedisService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api/v1/cedis';
+  private readonly baseUrl = `${environment.apiUrl}/cedis`;
 
   // ==================== CEDIS Operations ====================
 

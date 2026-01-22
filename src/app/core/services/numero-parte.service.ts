@@ -7,6 +7,7 @@ import {
   ActualizarNumeroParteDTO,
   ListarNumerosParteParams,
 } from '../models';
+import { environment } from '../../../environments/environment';
 
 /**
  * Service for managing part numbers
@@ -16,7 +17,7 @@ import {
 })
 export class NumeroParteService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api/v1/numeros-parte';
+  private readonly baseUrl = `${environment.apiUrl}/numeros-parte`;
 
   /**
    * Get all part numbers with optional filters
