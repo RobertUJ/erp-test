@@ -1,12 +1,18 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App {
-  protected readonly title = signal('webclient');
+  protected readonly title = signal('ERP');
+  protected isAdminMenuOpen = signal(false);
+
+  toggleAdminMenu(): void {
+    this.isAdminMenuOpen.update((v) => !v);
+  }
 }
