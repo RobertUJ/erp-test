@@ -416,7 +416,7 @@ export class InventoryManagementComponent implements OnInit {
       },
       error: (err) => {
         this.submitting.set(false);
-        this.formError.set(err.error?.detail || 'Failed to add inventory. Please try again.');
+        this.formError.set(err.error?.error || err.error?.detail || 'Failed to add inventory. Please try again.');
         console.error('Error adding inventory:', err);
       },
     });
