@@ -1,8 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { OrdenCompraService } from '../../../core/services';
-import { OrdenCompraResponseDTO, EstadoOrden } from '../../../core/models';
+import { OrdenCompraService, TicketSurtidoService } from '../../../core/services';
+import { OrdenCompraResponseDTO, EstadoOrden, TicketSurtidoResponseDTO } from '../../../core/models';
 
 @Component({
   selector: 'app-purchase-order-detail',
@@ -90,11 +90,30 @@ import { OrdenCompraResponseDTO, EstadoOrden } from '../../../core/models';
                   {{ actionLoading() ? 'Processing...' : 'Start Processing' }}
                 </button>
               }
-              @if (order()!.estado === 'EN_PROCESO') {
-                <button (click)="entregarOrden()" class="btn-success" [disabled]="actionLoading()">
-                  {{ actionLoading() ? 'Processing...' : 'Mark as Delivered' }}
-                </button>
+              @if (order()!.estado === 'EN_PROCESO' || order()!.estado === 'ENTREGADA') {
+                <div class="mt-2">
+                   @if (orderTickets().length > 0) {
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <span class="text-yellow-800">
+                        Check your tickets and process your order.
+                      </span>
+                      @for (ticket of orderTickets(); track ticket.id) {
+                        <a
+                          [routerLink]="['/tickets', ticket.id]"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        >
+                          {{ ticket.numero_ticket }}
+                        </a>
+                      }
+                    </div>
+                  } @else {
+                    <a routerLink="/tickets" class="text-green-600 ">
+                      Order Delivered  - Go to Tickets
+                    </a>
+                  }
+                </div>
               }
+
             </div>
           </div>
 
@@ -116,7 +135,15 @@ import { OrdenCompraResponseDTO, EstadoOrden } from '../../../core/models';
                   <tbody>
                     @for (item of order()!.items; track item.id) {
                       <tr>
-                        <td class="font-medium text-blue-600">{{ item.numero_parte_codigo }}</td>
+                        <td class="font-medium text-blue-600">
+                          @if (item.numero_parte_id) {
+                            <a [routerLink]="['/admin/part-numbers', item.numero_parte_id]" class="text-primary hover:underline">
+                              {{item.numero_parte_codigo}}
+                            </a>
+                          } @else {
+                            <span class="text-primary">{{ item.numero_parte_codigo }}</span>
+                          }
+                        </td>
                         <td>{{ item.numero_parte_descripcion }}</td>
                         <td>{{ item.cantidad }}</td>
                         <td>\${{ item.precio_unitario }}</td>
@@ -204,8 +231,10 @@ export class PurchaseOrderDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly orderService = inject(OrdenCompraService);
+  private readonly ticketService = inject(TicketSurtidoService);
 
   order = signal<OrdenCompraResponseDTO | null>(null);
+  orderTickets = signal<TicketSurtidoResponseDTO[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   actionLoading = signal(false);
@@ -226,11 +255,26 @@ export class PurchaseOrderDetailComponent implements OnInit {
       next: (data) => {
         this.order.set(data);
         this.loading.set(false);
+        // Load tickets if order is in process
+        if (data.estado === 'EN_PROCESO') {
+          this.loadOrderTickets(data.id);
+        }
       },
       error: (err) => {
         this.error.set('Failed to load order details.');
         this.loading.set(false);
         console.error('Error loading order:', err);
+      },
+    });
+  }
+
+  loadOrderTickets(orderId: number): void {
+    this.ticketService.obtenerPorOrdenId(orderId).subscribe({
+      next: (tickets) => {
+        this.orderTickets.set(tickets);
+      },
+      error: (err) => {
+        console.error('Error loading order tickets:', err);
       },
     });
   }
@@ -290,6 +334,8 @@ export class PurchaseOrderDetailComponent implements OnInit {
       next: (data) => {
         this.order.set(data);
         this.actionLoading.set(false);
+        // Load tickets after processing
+        this.loadOrderTickets(data.id);
       },
       error: (err) => {
         this.actionLoading.set(false);
@@ -297,23 +343,6 @@ export class PurchaseOrderDetailComponent implements OnInit {
       },
     });
   }
-
-  entregarOrden(): void {
-    if (!this.order()) return;
-    this.actionLoading.set(true);
-
-    this.orderService.entregar(this.order()!.id).subscribe({
-      next: (data) => {
-        this.order.set(data);
-        this.actionLoading.set(false);
-      },
-      error: (err) => {
-        this.actionLoading.set(false);
-        console.error('Error delivering order:', err);
-      },
-    });
-  }
-
   eliminarOrden(): void {
     if (!this.order()) return;
     this.actionLoading.set(true);

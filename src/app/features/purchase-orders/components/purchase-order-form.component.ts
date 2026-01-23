@@ -86,7 +86,16 @@ import { OrdenCompraResponseDTO, NumeroParteResponseDTO, OrdenCompraItemResponse
                   <tbody>
                     @for (item of order()!.items; track item.id) {
                       <tr>
-                        <td class="font-medium text-blue-600">{{ item.numero_parte_codigo }}</td>
+                        <td class="font-medium text-blue-600">
+                          @if (item.numero_parte_id) {
+                            <a [routerLink]="['/admin/part-numbers', item.numero_parte_id]" class="text-primary hover:underline">
+                              {{item.numero_parte_codigo}}
+                            </a>
+                          } @else {
+                            <span class="text-primary">{{ item.numero_parte_codigo }}</span>
+                          }
+                        </td>
+
                         <td>{{ item.numero_parte_descripcion }}</td>
                         <td>{{ item.cantidad }}</td>
                         <td>\${{ item.precio_unitario }}</td>
@@ -347,9 +356,10 @@ export class PurchaseOrderFormComponent implements OnInit {
 
     if (this.isEditMode() && this.order()) {
       this.orderService.actualizar(this.order()!.id, dto).subscribe({
-        next: (data) => {
-          this.order.set(data);
+        next: () => {
           this.submitting.set(false);
+          // Reload order to get updated data with items
+          this.loadOrder(this.order()!.id);
         },
         error: (err) => {
           this.submitting.set(false);
@@ -383,23 +393,54 @@ export class PurchaseOrderFormComponent implements OnInit {
     this.itemError.set(null);
 
     const formValue = this.itemForm.value;
-    const dto = {
-      numero_parte_codigo: formValue.numero_parte_codigo,
-      cantidad: formValue.cantidad,
-    };
+    const partCode = formValue.numero_parte_codigo;
+    const newQuantity = formValue.cantidad;
 
-    this.orderService.agregarItem(this.order()!.id, dto).subscribe({
-      next: () => {
-        this.itemSubmitting.set(false);
-        this.closeItemModal();
-        this.loadOrder(this.order()!.id);
-      },
-      error: (err) => {
-        this.itemSubmitting.set(false);
-        this.itemError.set(err.error?.error || err.error?.detail || 'Failed to add item.');
-        console.error('Error adding item:', err);
-      },
-    });
+    // Check if item already exists in the order
+    const existingItem = this.order()!.items.find(
+      (item) => item.numero_parte_codigo === partCode
+    );
+
+    if (existingItem) {
+      // Item exists - update with total quantity
+      const totalQuantity = existingItem.cantidad + newQuantity;
+      const dto = {
+        cantidad: totalQuantity,
+        precio_unitario: existingItem.precio_unitario?.toString(),
+      };
+
+      this.orderService.actualizarItem(this.order()!.id, existingItem.id, dto).subscribe({
+        next: () => {
+          this.itemSubmitting.set(false);
+          this.closeItemModal();
+          this.loadOrder(this.order()!.id);
+        },
+        error: (err) => {
+          this.itemSubmitting.set(false);
+          this.itemError.set(err.error?.error || err.error?.detail || 'Failed to update item.');
+          console.error('Error updating item:', err);
+        },
+      });
+    } else {
+      // New item - add normally
+      const dto = {
+        numero_parte_codigo: partCode,
+        cantidad: newQuantity,
+      };
+
+      this.orderService.agregarItem(this.order()!.id, dto).subscribe({
+        next: () => {
+          this.itemSubmitting.set(false);
+          this.closeItemModal();
+          this.loadOrder(this.order()!.id);
+        },
+        error: (err) => {
+          this.itemSubmitting.set(false);
+          this.itemError.set(err.error?.error || err.error?.detail || 'Failed to add item.');
+          console.error('Error adding item:', err);
+        },
+      });
+    }
   }
 
   editItem(item: OrdenCompraItemResponseDTO): void {

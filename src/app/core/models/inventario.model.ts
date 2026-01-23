@@ -61,4 +61,5 @@ export interface UbicacionDelProductoDTO {
   ubicacion_codigo: string;
   cedis_nombre?: string;
   cantidad: number;
+  fecha_ingreso: string;
 }

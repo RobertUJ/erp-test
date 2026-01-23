@@ -9,3 +9,6 @@ export * from './inventario.model';
 
 // Purchase Orders
 export * from './orden-compra.model';
+
+// Tickets de Surtido
+export * from './ticket-surtido.model';

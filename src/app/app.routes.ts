@@ -38,6 +38,22 @@ export const routes: Routes = [
       ),
   },
 
+  // Tickets de Surtido routes
+  {
+    path: 'tickets',
+    loadComponent: () =>
+      import('./features/tickets/components/tickets-list.component').then(
+        (m) => m.TicketsListComponent
+      ),
+  },
+  {
+    path: 'tickets/:id',
+    loadComponent: () =>
+      import('./features/tickets/components/ticket-detail.component').then(
+        (m) => m.TicketDetailComponent
+      ),
+  },
+
   // Redirect old part-numbers routes to admin
   {
     path: 'part-numbers',

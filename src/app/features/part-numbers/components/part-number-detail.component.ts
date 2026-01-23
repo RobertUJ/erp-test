@@ -148,6 +148,7 @@ import { NumeroParteResponseDTO, UbicacionDelProductoDTO } from '../../../core/m
                     <th>Location Code</th>
                     <th>CEDIS</th>
                     <th>Quantity</th>
+                    <th>Fecha Ingreso</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -158,6 +159,7 @@ import { NumeroParteResponseDTO, UbicacionDelProductoDTO } from '../../../core/m
                       <td>
                         <span class="badge badge-info">{{ loc.cantidad }}</span>
                       </td>
+                      <td>{{ formatDate(loc.fecha_ingreso) }}</td>
                     </tr>
                   }
                 </tbody>
